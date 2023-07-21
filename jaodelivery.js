@@ -1,5 +1,12 @@
+const WHATSAPP_LICENCIADO = '553184038882';
+const WHATSAPP_LICENCIADO2 = '553184427925';
+const WHATSAPP_SAIDEIRA = '553130974550';
+const FRASE_NOVO_PEDIDO = 'Fala aí, você tem um novo pedido';
+const TOKEN_API_PLANILHA = '3f6a35587r72s';
+
+
 const sheetdb = require("sheetdb-node");
-const clientSheet = sheetdb({address: '3f6a35587r72s'})
+const clientSheet = sheetdb({address: TOKEN_API_PLANILHA})
 
 const { Client, Location, List, Buttons, LocalAuth, MessageMedia } = require('./index');
 
@@ -11,11 +18,6 @@ const client = new Client({
         headless: false
     }
 });
-
-const WHATSAPP_LICENCIADO = '553184038882';
-const WHATSAPP_LICENCIADO2 = '553184427925';
-const WHATSAPP_SAIDEIRA = '553130974550';
-const FRASE_NOVO_PEDIDO = 'Fala aí, você tem um novo pedido';
 
 client.initialize();
 
