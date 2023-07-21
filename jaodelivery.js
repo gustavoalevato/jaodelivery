@@ -1,7 +1,7 @@
 const WHATSAPP_LICENCIADO = '553184038899';
 const WHATSAPP_LICENCIADO2 = '553184427987';
 const FRASE_NOVO_PEDIDO = 'Fala aí, você tem um novo pedido';
-const TOKEN_API_PLANILHA = '3f6a35587r72s';
+const TOKEN_API_PLANILHA = '3f6a35587r72aa';
 
 
 const sheetdb = require("sheetdb-node");
