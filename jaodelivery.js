@@ -1,11 +1,22 @@
-const WHATSAPP_LICENCIADO = '553184038899';
-const WHATSAPP_LICENCIADO2 = '553184427987';
-const FRASE_NOVO_PEDIDO = 'Fala aí, você tem um novo pedido';
-const TOKEN_API_PLANILHA = '3f6a35587r72aa';
+const PLANILHA_CLIENTES = '3f6a35587r72s';
+const PLANILHA_PARCEIROS = 'jzcibz6hiuy33';
+const PLANILHA_FATURAS = '9xt74be8jia2i';
 
+const WHATSAPP_LICENCIADO = '553184038882';
+const WHATSAPP_LICENCIADO2 = '553184427925';
+
+const FRASE_NOVO_PEDIDO = 'Fala aí, você tem um novo pedido';
+
+const FRASE_AJUDA_CLIENTE = 'Olá, estou precisando de ajuda em meu pedido feito';
+
+const COMANDO_FATURA = '!fatura';
+
+const REPLICA_MSG_PEDIDOS = true;
 
 const sheetdb = require("sheetdb-node");
-const clientSheet = sheetdb({address: TOKEN_API_PLANILHA})
+const clientSheet = sheetdb({address: PLANILHA_CLIENTES})
+const parceirosSheet = sheetdb({address: PLANILHA_PARCEIROS})
+const faturasSheet = sheetdb({address: PLANILHA_FATURAS})
 
 const { Client, Location, List, Buttons, LocalAuth, MessageMedia } = require('./index');
 
@@ -16,6 +27,11 @@ const client = new Client({
         // args: ['--proxy-server=proxy-server-that-requires-authentication.example.com'],
         headless: false
     }
+});
+
+var parceiros;
+parceirosSheet.read().then(function(data){
+    parceiros = JSON.parse(data);
 });
 
 client.initialize();
@@ -63,7 +79,6 @@ client.on('message', async msg => {
                     setTimeout(function(){
 
                         if(hasMedia){
-                            media.
                             client.sendMessage(whatsapp + '@c.us', media);
                         }
 
@@ -79,13 +94,141 @@ client.on('message', async msg => {
         
     }
 
-    if (msg.body.startsWith(FRASE_NOVO_PEDIDO)){
+    if (REPLICA_MSG_PEDIDOS && msg.body.startsWith(FRASE_NOVO_PEDIDO)){
+
         client.sendMessage(WHATSAPP_LICENCIADO + '@c.us', msg.body);
+
         setTimeout(function(){
             client.sendMessage(WHATSAPP_LICENCIADO2 + '@c.us', msg.body);
         }, 1000 + Math.floor(Math.random() * 8000) * 1);
 
+        parceiros.forEach((row, i) => {
+            const wppParceiro = row.whatsapp;
+            const nomeLoja = row.loja;
+
+            if(nomeLoja.length > 4){
+                if(msg.body.match(nomeLoja) != null){
+                    setTimeout(function(){
+                        client.sendMessage(wppParceiro + '@c.us', msg.body);
+                    }, 1000 + Math.floor(Math.random() * 8000) * 1);
+                }
+            }
+
+        });
     }
+
+    if (REPLICA_MSG_PEDIDOS && msg.body.startsWith(FRASE_AJUDA_CLIENTE)){
+
+        const mensagem = msg.body + "\n\nSegue contato do cliente: " + msg.from.replace('@c.us', '') + "\n\n*Mensagem automática*";
+
+        client.sendMessage(WHATSAPP_LICENCIADO + '@c.us', mensagem);
+
+        setTimeout(function(){
+            client.sendMessage(WHATSAPP_LICENCIADO2 + '@c.us', mensagem);
+        }, 1000 + Math.floor(Math.random() * 8000) * 1);
+
+        /*parceiros.forEach((row, i) => {
+            const wppParceiro = row.whatsapp;
+            const nomeLoja = row.loja;
+
+            if(nomeLoja.length > 4){
+                if(msg.body.match(nomeLoja) != null){
+                    setTimeout(function(){
+                        client.sendMessage(wppParceiro + '@c.us', msg.body);
+                    }, 1000 + Math.floor(Math.random() * 8000) * 1);
+                }
+            }
+
+        });*/
+    }
+
+    
+    if (msg.body.startsWith(COMANDO_FATURA)){
+
+        let mensagemRecebimento = "Olá,tudo bem? 💛\n\n";
+        mensagemRecebimento += "Verifiquei aqui e o valor da comissão, subtraindo o valor dos cupons de desconto aplicados de *{estabelecimento}*, que deverá ser repassada para o Jão, referente ao mês passado é de *{vlrSaldo}*.";
+        mensagemRecebimento += "\n\n";
+        mensagemRecebimento += "Caso haja alguma dúvida, o detalhamento da fatura está disponível no painel do Jão, na aba Faturas.";
+        mensagemRecebimento += "\n\n";
+        mensagemRecebimento += "Vou te encaminhar a chave pix logo abaixo.";
+        mensagemRecebimento += "\n\n";
+        mensagemRecebimento += "⚠️ Dados para pagamentos via PIX";
+        mensagemRecebimento += "\n\n";
+        mensagemRecebimento += "*Instituição bancária:*\n";
+        mensagemRecebimento += "Bco C6 S.A.";
+        mensagemRecebimento += "\n\n";
+        mensagemRecebimento += "*Favorecido:*\n";
+        mensagemRecebimento += "GUSTAVO ALEVATO DE LACERDA TEIXEIRA";
+        mensagemRecebimento += "\n\n";
+        mensagemRecebimento += "*Chave PIX E-mail:*\n";
+        mensagemRecebimento += "jaodeliverynovalima@gmail.com";
+        mensagemRecebimento += "\n\n";
+        mensagemRecebimento += "----------------------------------------------------------------";
+        mensagemRecebimento += "\n\n";
+        mensagemRecebimento += "Juntos no mê passado, vendemos o total de *{vlrRecebido}* entre produtos e taxas de entrega!";
+        mensagemRecebimento += "\n\n";
+        mensagemRecebimento += "Obrigado pela parceria, vamos juntos 💪🏼!";
+        mensagemRecebimento += "\n\n\n\n";
+        mensagemRecebimento += "**Mensagem automática*";
+
+        let mensagemRepasse = "Olá,tudo bem? 💛\n\n";
+        mensagemRepasse += "Verifiquei aqui e o valor da comissão de *{estabelecimento}*, foi inferior ao valor de descontos de cupons. Dessa forma, o Jão deverá repassar a diferença de *{vlrSaldo}*.";
+        mensagemRepasse += "\n\n";
+        mensagemRepasse += "Caso haja alguma dúvida, o detalhamento da fatura está disponível no painel do Jão, na aba Faturas.";
+        mensagemRepasse += "\n\n";
+        mensagemRepasse += "Por favor, informe o PIX para que possamos fazer o repasse referente ao mês anterior. ";
+        mensagemRepasse += "\n\n";
+        mensagemRepasse += "Juntos no mê passado, vendemos o total de *{vlrRecebido}* entre produtos e taxas de entrega!";
+        mensagemRepasse += "\n\n";
+        mensagemRepasse += "Obrigado pela parceria, vamos juntos 💪🏼!";
+        mensagemRepasse += "\n\n\n\n";
+        mensagemRepasse += "**Mensagem automática*";
+
+        
+        faturasSheet.read().then(function(data){
+            let faturas = JSON.parse(data);
+
+            faturas.forEach((fatura, c) => {
+            
+                const estabelecimento = fatura.estabelecimento;
+                const vlrRecebido = fatura.recebido;
+                const vlrVenda = fatura.venda;
+                const vlrComissao = fatura.comissao;
+                const vlrDescontos = fatura.descontos;
+                const vlrSaldo = fatura.saldo;
+                
+                const saldo = parseFloat(vlrSaldo.replace('R$', '').replace(',', '.'));
+
+                var msg = '';
+                if (vlrSaldo.startsWith('-')){
+                    msg = mensagemRepasse.replace('{vlrSaldo}', vlrSaldo.replace('-', '')).replace('{estabelecimento}', estabelecimento).replace('{vlrRecebido}', vlrRecebido);
+                }else{
+                    msg = mensagemRecebimento.replace('{vlrSaldo}', vlrSaldo).replace('{estabelecimento}', estabelecimento).replace('{vlrRecebido}', vlrRecebido);
+                }
+    
+                const bodyMessage = msg;
+
+                parceiros.forEach((row, i) => {
+                    const wppParceiro = row.whatsappResponsavel;
+                    const nomeLoja = row.loja;
+        
+                    if(nomeLoja.length > 4){
+                        if(estabelecimento.trim() == nomeLoja.trim()){
+                            setTimeout(function(){
+                                client.sendMessage(wppParceiro + '@c.us', bodyMessage);
+                            }, 1000 + Math.floor(Math.random() * 8000) * 1);
+                        }
+                    }
+        
+                });
+    
+            });
+        });
+
+        
+    }
+    
+    
 
     if (msg.body === '!ping reply') {
         // Send a new message as a reply to the current one
@@ -293,7 +436,7 @@ client.on('message_revoke_everyone', async (after, before) => {
 
 client.on('message_revoke_me', async (msg) => {
     // Fired whenever a message is only deleted in your own view.
-    console.log(msg.body); // message before it was deleted.
+    //console.log(msg.body); // message before it was deleted.
 });
 
 client.on('message_ack', (msg, ack) => {
@@ -312,6 +455,7 @@ client.on('message_ack', (msg, ack) => {
     }
 });
 
+/*
 client.on('group_join', (notification) => {
     // User has joined or been added to the group.
     console.log('join', notification);
@@ -323,6 +467,7 @@ client.on('group_leave', (notification) => {
     console.log('leave', notification);
     notification.reply('User left.');
 });
+
 
 client.on('group_update', (notification) => {
     // Group picture, subject or description has been updated.
@@ -345,6 +490,7 @@ client.on('call', async (call) => {
 client.on('disconnected', (reason) => {
     console.log('Client was logged out', reason);
 });
+*/
 
 client.on('contact_changed', async (message, oldId, newId, isContact) => {
     /** The time the event occurred. */
